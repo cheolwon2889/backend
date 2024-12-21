@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import java.io.Console;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -12,27 +14,24 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.service.OpenURLService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+/* @CrossOrigin(origins = "http://localhost:3000") */
 public class TestController {
 	
 	@Autowired
 	private OpenURLService openUService;
 	
-	@GetMapping("/")
-	public void main() {
-		System.out.println("main 실행");
+	@GetMapping("/api")
+	public String main() {
+		return "백엔드 데이터 연결";
 	}
 	
-	@GetMapping("/hello")
-	public void hello() {
-		System.out.println("hello 실행");
-	}
+
 	
 	@GetMapping("/weather")
 	public void weatherGET() {
 		openUService.getWeather();
 	}
 	
-	
+
 
 }
