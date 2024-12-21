@@ -33,12 +33,13 @@ public class WeatherDataService {
 	// current_dir = 유향, current_speed = 유속,
 	// http://www.khoa.go.kr/api/oceangrid/buObsRecent/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=TW_0086&ResultType=json
 
+	// wave_height = 파고
+	// http://www.khoa.go.kr/api/oceangrid/obsWaveHight/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=KG_0024&Date=20241221&ResultType=json
+	
 	private final String firstApiUrl = "http://www.khoa.go.kr/api/oceangrid/tideObsRecent/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=DT_0056&ResultType=json";
 	private final String secondApiUrl = "http://www.khoa.go.kr/api/oceangrid/buObsRecent/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=TW_0086&ResultType=json";
 	private final String baseThirdApiUrl = "http://www.khoa.go.kr/api/oceangrid/obsWaveHight/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=KG_0024&ResultType=json";
 
-	// wave_height = 파고
-	// http://www.khoa.go.kr/api/oceangrid/obsWaveHight/search.do?ServiceKey=DQNqUDCwKpopPLahHEwpkg==&ObsCode=KG_0024&Date=20241221&ResultType=json
 	public Map<String, Object> fetchAllApiData() {
 		Map<String, Object> result = new HashMap<>();
 

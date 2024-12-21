@@ -22,8 +22,8 @@ public class OpenAiController {
 	
 	// 일단 테스트로 PostMapping을 하고
 	@PostMapping
-	public String chatWithOpenAI(@RequestBody Map<String, Object> inputData) {
-		return openAiService.getChatGPTResponse(inputData);
+	public String chatWithOpenAI() {
+		return openAiService.getGeminiResponse();
 	}
 	
 }
