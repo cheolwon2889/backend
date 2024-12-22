@@ -22,6 +22,8 @@ public class OpenAiController {
 	
 	
 	
+	
+	
 	// 일단 테스트로 PostMapping을 하고
 	@PostMapping
     public ResponseEntity<Map<String, String>> chatWithOpenAI() {

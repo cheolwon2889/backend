@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.service.RewardService;
 import com.example.demo.service.WeatherDataService;
 
 @RestController
@@ -69,6 +70,13 @@ public class WeatherController {
 			errorResponse.put("details", e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 		}
+	}
+	@Autowired
+	private RewardService rewardService;
+	
+	@GetMapping("test")
+	public void DBCon() {
+		rewardService.printRewards();
 	}
 
 
