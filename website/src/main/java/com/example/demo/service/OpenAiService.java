@@ -109,7 +109,11 @@ public class OpenAiService {
              if (responseBody != null && responseBody.containsKey("candidates")) {
                  List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get("candidates");
                  if (!candidates.isEmpty()) {
-                     return (String) candidates.get(0).get("output");
+                     Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
+                     List<Map<String, Object>> partsList = (List<Map<String, Object>>) content.get("parts");
+                     if (!partsList.isEmpty()) {
+                         return (String) partsList.get(0).get("text");
+                     }
                  }
              }
              return "No candidates or output found in the response.";
