@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -51,6 +53,8 @@ public class WeatherDataService {
 
 		// 세 번째 API 호출
 		fetchThirdApiData(result);
+		
+		fetchFourthApiData(result);
 
 		return result;
 	}
@@ -147,8 +151,73 @@ public class WeatherDataService {
 	        result.put("error_third_api", "세 번째 API 호출 실패 또는 데이터 처리 오류: " + e.getMessage());
 	    }
 	}
+	
+	 private void fetchFourthApiData(Map<String, Object> result) {
+        // 네 번째 API 데이터 처리 로직 추가
+		 try {
+			 
+			 // 현재 시간 계산
+	            Calendar calendar = Calendar.getInstance();
+	            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHH");
+	            String baseTime = dateFormat.format(calendar.getTime());
 
+	            int minute = calendar.get(Calendar.MINUTE);
+	            String roundedMinute = (minute < 30) ? "00" : "30";
 
+	            
+				String baseURL = "https://apihub.kma.go.kr/api/typ01/url/kma_buoy.php";
+				String tm = baseTime + roundedMinute;
+				String stn = "22104";
+				String authKey = "bbldb-BeTAW5XW_gXnwFVg";
+
+				// URL 생성
+				String encodedAuthKey = URLEncoder.encode(authKey, "UTF-8");
+				String fullURL = String.format("%s?tm=%s&stn=%s&help=0&authKey=%s", baseURL, tm, stn, encodedAuthKey);
+				URL url = new URL(fullURL);
+
+				// HTTP 연결
+				HttpURLConnection con = (HttpURLConnection) url.openConnection();
+				con.setRequestMethod("GET");
+				con.setRequestProperty("Content-Type", "application/json");
+
+				// 응답 처리
+				int responseCode = con.getResponseCode();
+				if (responseCode == HttpURLConnection.HTTP_OK) {
+					BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+					String inputLine;
+					StringBuffer response = new StringBuffer();
+
+					while ((inputLine = in.readLine()) != null) {
+						response.append(inputLine);
+					}
+					in.close();
+
+					// API 응답 결과를 출력합니다.
+					String apiResponse = response.toString();
+					
+					// 고정된 값 가져오기
+					String last21 = apiResponse.substring(apiResponse.length() - 21);
+
+			        // 값 추출 및 변수 저장
+			        String value1 = last21.substring(0, 3).trim(); // "1.0"
+			        String value2 = last21.substring(5, 9).trim(); // "5.7"
+			        String value3 = last21.substring(11, 13).trim(); // "60"
+			        
+			        // 값 담기
+			        result.put("WH_AVE", value1);
+		            result.put("WP", value2);
+		            result.put("WO", value3);
+			        
+				} else {
+					System.out.println("GET request failed. HTTP response code: " + responseCode);
+				}
+				con.disconnect(); // 연결 해제
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    }
+
+	 
 
 	// 닻의 장력 계산
 	// 필요 데이터 : 유속 및 방향, 수심, 선박의 크기, 무게, 풍압 면적, 파고(파고 (Wave Height),파주기 (Wave
