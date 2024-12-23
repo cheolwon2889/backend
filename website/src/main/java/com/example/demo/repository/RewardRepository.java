@@ -4,10 +4,9 @@ import java.util.List;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
-
+import lombok.RequiredArgsConstructor;
 import com.example.demo.domain.RewardVO;
 
-import lombok.RequiredArgsConstructor;
 @Repository
 @RequiredArgsConstructor
 public class RewardRepository {
