@@ -7,4 +7,22 @@
     <select id="getReward" resultType="com.example.demo.domain.RewardVO">
         SELECT * FROM reward
     </select>
+    
+    
+    <!-- 1. 가정 : 배에 들어갈 컨테이너가 정해져 있는건지? 아니면 기존에 있는 컨테이너에서 조합하여 컨테이너 선에 넣어야 하는지-->
+    
+    <!-- 전자 : 정해져 있으면 List<String> 으로 가져와두 되고 -->
+    <!-- 후자 : 정해져 있지 않으면 여러 값들을 가져와야 해서 VO를 생성해서 받아와야됨. -->
+    
+    <!-- List<String> -->
+    <select id="getRoute" resultType="String">
+    	id,
+	    CONCAT(
+	        IFNULL(waypoint, ''), 
+	        IF(waypoint IS NOT NULL, ',', ''), 
+	        destination
+	    ) AS route
+        form ship_table
+        where ship_id = {id}
+    </select>
 </mapper>
