@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="PortMapper">
+	
+	<resultMap id="portMap" type="com.example.demo.domain.PortVO">
+		<result property="port_id" column="port_id"/>
+        <result property="port_num" column="port_num"/>
+        <result property="port_length" column="port_length"/>
+        <result property="port_draft" column="port_draft"/>
+		<association property="shipVO" javaType="com.example.demo.domain.ShipVO">
+            <result property="ship_id" column="ship_id"/>
+            <result property="ship_length" column="ship_length"/>
+            <result property="ship_weight" column="ship_weight"/>
+        </association>
+		<association property="scheduleVO" javaType="com.example.demo.domain.ScheduleVO">
+            <result property="arrival_time" column="arrival_time"/>
+            <result property="departure_time" column="departure_time"/>
+        </association>
+	</resultMap>
+	
+    <select id="selectPort" resultMap="portMap">
+        select * from port
+    </select>
+    
+</mapper>
