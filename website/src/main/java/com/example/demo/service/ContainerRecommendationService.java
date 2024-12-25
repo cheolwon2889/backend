@@ -15,157 +15,141 @@ import com.example.demo.domain.ContainerVO;
 @Service("ContainerRecommendationService")
 public class ContainerRecommendationService {
 
-	public void getContainerRecommendation(List<ContainerVO> containerList) {
-		String route = "Busan,Shanghai,Singapore,Rotterdam,Los Angeles";
-	    List<String> routeList = Arrays.asList(route.split(","));
+	public void calculateContainerRecommendation(List<ContainerVO> containerVOList) {
+	    // 미리 정의된 포트 목록
+	    String portString = "Busan,Shanghai,Singapore,Rotterdam,Los Angeles";
+	    List<String> portList = Arrays.asList(portString.split(","));
 
-	    // 결과를 저장할 리스트
-	    List<List<Map<String, Object>>> result = new ArrayList<>();
-	    List<List<Map<String, Object>>> newResult = new ArrayList<>();
+	    // (1) 포트별로 분류한 뒤 정렬된 컨테이너 목록 저장
+	    List<List<Map<String, Object>>> sortedContainersByPort = new ArrayList<>();
+	    
+	    // (2) 최종적으로 100개씩 맞춰서 재정렬된 컨테이너 목록
+	    List<List<Map<String, Object>>> refinedContainersByPort = new ArrayList<>();
+	    
+	    // (3) 최종 10x10 형태로 배치된 컨테이너 목록
+	    List<List<Map<String, Object>>> finalArrangedContainers = new ArrayList<>();
 
-	    // 각 포트를 순회
-	    for (String port : routeList) {
+	    // (A) 각 포트를 순회하며 해당 포트에 있는 컨테이너 목록을 무게 내림차순으로 정렬
+	    for (String port : portList) {
 	        List<Map<String, Object>> portContainers = new ArrayList<>();
 
-	        for (ContainerVO container : containerList) {
+	        for (ContainerVO container : containerVOList) {
 	            if (container.getPort().equals(port)) {
-	                Map<String, Object> containerInfo = new HashMap<>();
-	                containerInfo.put("ID", container.getId());
-	                containerInfo.put("Weight", container.getWeight());
-	                portContainers.add(containerInfo);
+	                Map<String, Object> containerMap = new HashMap<>();
+	                containerMap.put("ID", container.getId());
+	                containerMap.put("Weight", container.getWeight());
+	                portContainers.add(containerMap);
 	            }
 	        }
 
-	        // 내림차순 정렬 (무게 기준)
+	        // 내림차순(무게 기준) 정렬
 	        portContainers.sort((a, b) -> Double.compare((double) b.get("Weight"), (double) a.get("Weight")));
-
-	        result.add(portContainers);
+	        sortedContainersByPort.add(portContainers);
 	    }
 
-	    // 초과 데이터 처리 및 부족 데이터 채우기
-	    List<Map<String, Object>> carryOver = new ArrayList<>();
-	    for (int i = 0; i < result.size(); i++) {
-	        // 현재 항구 데이터 + carryOver
-	        List<Map<String, Object>> combinedList = new ArrayList<>(carryOver);
-	        combinedList.addAll(result.get(i));
+	    // (B) 각 포트별 컨테이너를 100개씩 맞추고, 초과/부족분을 앞뒤 포트에서 조정
+	    List<Map<String, Object>> carryOverContainers = new ArrayList<>();
+	    for (int i = 0; i < sortedContainersByPort.size(); i++) {
+	        // 기존 carryOverContainers + 현재 포트 컨테이너
+	        List<Map<String, Object>> combinedList = new ArrayList<>(carryOverContainers);
+	        combinedList.addAll(sortedContainersByPort.get(i));
 
-	        // carryOver 초기화
-	        carryOver.clear();
+	        // carryOverContainers 초기화
+	        carryOverContainers.clear();
 
-	        // 부족한 경우 다음 항구 데이터에서 역순으로 추가
+	        // 컨테이너가 100개 이하인 경우 -> 다음 포트에서 부족분 보충
 	        if (combinedList.size() < 100) {
-	            int index = i + 1;
-	            while (combinedList.size() < 100 && index < result.size()) {
-	                List<Map<String, Object>> nextPortContainers = result.get(index);
-
+	            int nextPortIndex = i + 1;
+	            while (combinedList.size() < 100 && nextPortIndex < sortedContainersByPort.size()) {
+	                List<Map<String, Object>> nextPortContainers = sortedContainersByPort.get(nextPortIndex);
 	                while (combinedList.size() < 100 && !nextPortContainers.isEmpty()) {
 	                    combinedList.add(nextPortContainers.remove(nextPortContainers.size() - 1));
 	                }
-
-	                index++;
+	                nextPortIndex++;
 	            }
 	        }
 
-	        // 100개로 제한하고 초과 데이터는 carryOver에 저장
+	        // 컨테이너가 100개를 초과하는 경우 -> 초과분은 carryOverContainers에 저장
 	        if (combinedList.size() > 100) {
-	            carryOver.addAll(combinedList.subList(100, combinedList.size()));
+	            carryOverContainers.addAll(combinedList.subList(100, combinedList.size()));
 	            combinedList = combinedList.subList(0, 100);
 	        }
 
-	        // 최종 리스트에 추가 (0인 경우 제외)
+	        // 최종 정렬 후 refinedContainersByPort 리스트에 저장
 	        if (!combinedList.isEmpty()) {
-	        	combinedList.sort((a, b) -> Double.compare((double) b.get("Weight"), (double) a.get("Weight")));
-	            newResult.add(combinedList);
+	            combinedList.sort((a, b) -> Double.compare((double) b.get("Weight"), (double) a.get("Weight")));
+	            refinedContainersByPort.add(combinedList);
 	        }
 	    }
-	    // 최종 결과 출력 및 확인
-	    for (int i = 0; i < newResult.size(); i++) {
-	        String port = routeList.get(i);
-	        List<Map<String, Object>> containers = newResult.get(i);
 
-	        System.out.println("Port: " + port);
-	        System.out.println("Containers: " + containers.size());
-	        System.out.println("Container List: " + containers); // 실제 데이터 출력
+	    // (C) 실제로 10x10 형태로 배치하기 위한 인덱스 목록
+	    List<Integer> startColumnIndexes = Arrays.asList(4, 5);
+	    List<Integer> middleColumnIndexes = Arrays.asList(3, 6, 2, 7, 1, 8);
+	    List<Integer> endColumnIndexes = Arrays.asList(0, 9);
+
+	    // (D) 10x10 형태로 최종 재배치
+	    for (int index = 0; index < refinedContainersByPort.size(); index++) {
+	        // index 번째 포트 데이터 100개
+	        List<Map<String, Object>> portData = refinedContainersByPort.get(index);
+	        
+	        // 10x10 형태로 배치할 임시 2차원 배열
+	        @SuppressWarnings("unchecked")
+	        Map<String, Object>[][] arrangedMatrix = new Map[10][10];
+
+	        // 시작/중간/끝 포인터
+	        int startPointer = 0;    // startColumnIndexes 배치 시 사용
+	        int middlePointer = 20;  // middleColumnIndexes 배치 시 사용
+	        int endPointer = 99;     // endColumnIndexes 배치 시 사용
+
+	        // 행 번호 조정
+	        int currentRow = 5;
+	        // true이면 행 번호 증가 방향(양수), false이면 행 번호 감소 방향(음수)
+	        boolean isIncreasingRow = true;
+
+	        for (int rowIncrement = 0; rowIncrement < 10; rowIncrement++) {
+	            // 행 인덱스 계산
+	            if (isIncreasingRow) {
+	                currentRow += rowIncrement;  // 5 -> 5+1 -> 6+2 -> ...
+	            } else {
+	                currentRow -= rowIncrement;  // 5 -> 5-1 -> 4-2 -> ...
+	            }
+
+	            // 한 행에 대해 열(0~9)에 따라 값을 배치
+	            for (int col = 0; col < 10; col++) {
+	                if (startColumnIndexes.contains(col)) {
+	                    arrangedMatrix[currentRow][col] = portData.get(startPointer);
+	                    startPointer++;
+	                } else if (middleColumnIndexes.contains(col)) {
+	                    arrangedMatrix[currentRow][col] = portData.get(middlePointer);
+	                    middlePointer++;
+	                } else if (endColumnIndexes.contains(col)) {
+	                    arrangedMatrix[currentRow][col] = portData.get(endPointer);
+	                    endPointer--;
+	                }
+	            }
+	            // 행 증가/감소 방향 토글
+	            isIncreasingRow = !isIncreasingRow;
+	        }
+
+	        // 2차원 배열에서 null이 아닌 데이터만 추출하여 최종 리스트에 추가
+	        List<Map<String, Object>> arrangedList = new ArrayList<>();
+	        for (int row = 0; row < arrangedMatrix.length; row++) {
+	            for (int col = 0; col < arrangedMatrix[row].length; col++) {
+	                Map<String, Object> map = arrangedMatrix[row][col];
+	                if (map != null) {
+	                    arrangedList.add(map);
+	                }
+	            }
+	        }
+	        finalArrangedContainers.add(arrangedList);
 	    }
 
-			
-			
-
-//		// 결과 출력
-//		for (List<Map<String, Object>> portList : result) {
-//			System.out.println(portList);
-//		}
-
-//	    이게 문제가 아님.
-
-	// 우선 처리해야 할 조건은. 선박에 한층에 몇개를 포용할 수 있는지;
-	// 그러면
-
-	// 10x10 배열 생성 및 초기화
-//	    Double[][] routesArray = new Double[10][10];
-//	    for (int i = 0; i < routesArray.length; i++) {
-//	        for (int j = 0; j < routesArray[i].length; j++) {
-//	            routesArray[i][j] = 0.0;
-//	        }
-//	    }
-
-//	    Double[] temp2List = new Double[10];
-
-//	    int startPointer = 0;
-//	    int endPointer = .size() -1; 
-
-//	    System.out.println(temp2List);
-
-	// 중앙부터 값 채우기
-//	    int centerRow = routesArray.length / 2;
-//	    System.out.println(centerRow);
-//	    int centerCol = routesArray[0].length / 2;
-//	    System.out.println(routes.size() + ": 몇?" );
-//	    System.out.println(ContainerList.size()+" : 몇 ??? ");
-//	    
-//	    for(int r = 0; r < routes.size() ; r++) {
-//	    	List<Double> tempRoute = routes.get(r);
-//	    	System.out.println("tempRoute 값 : " + tempRoute );
-//	    	for(int w = 0; w< tempRoute.size(); w++) {
-//	    		//                                  실제 있는 값.
-//	    		// routesArray[centerRow][centerCol] = tempRoute.get(w);
-//	    		
-//	    	    System.out.println("값 : " + tempRoute.get(w) );
-//	    	}
-//	    }
-
-//	    for (int r = 0; r < routes.size(); r++) {
-//	        List<Double> tempRoute = routes.get(r);
-//	        int layer = r; // 각 리스트는 다른 레이어로 확장
-//	        int currentRow = centerRow;
-//	        int currentCol = centerCol;
-//
-//	        for (int c = 0; c < tempRoute.size(); c++) {
-//	            // 현재 값 넣기
-//	            routesArray[currentRow][currentCol] = tempRoute.get(c);
-//
-//	            // 다음 값으로 이동: 레이어 확장
-//	            if (currentCol + 1 < routesArray[0].length - layer) {
-//	                currentCol++; // 우측 이동
-//	            } else if (currentRow + 1 < routesArray.length - layer) {
-//	                currentRow++; // 아래 이동
-//	            } else if (currentCol - 1 >= layer) {
-//	                currentCol--; // 좌측 이동
-//	            } else if (currentRow - 1 >= layer) {
-//	                currentRow--; // 위로 이동
-//	            }
-//	        }
-//	    }
-
-	// 결과 출력
-//	    System.out.println("Routes Array:");
-//	    for (Double[] row : routesArray) {
-//	        System.out.println(Arrays.toString(row));
-//	    }
-//
-//	    System.out.println("Routes:");
-//	    for (List<Double> routePorts : routes) {
-//	        System.out.println(routePorts);
-//	    }
+	    // (E) 최종 결과 확인 (디버그 용도)
+	    for (int i = 0; i < finalArrangedContainers.size(); i++) {
+	        List<Map<String, Object>> portContainerList = finalArrangedContainers.get(i);
+	        System.out.println("Port index " + i + " Container Count: " + portContainerList.size());
+	        System.out.println("Container Data: " + portContainerList);
+	    }
 	}
+
 }

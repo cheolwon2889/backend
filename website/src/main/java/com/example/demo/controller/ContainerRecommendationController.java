@@ -424,10 +424,7 @@ public class ContainerRecommendationController {
 	        );
 
 		 
-		containerService.getContainerRecommendation(containers);
+		containerService.calculateContainerRecommendation(containers);
 	}
-	
-	
-	
 
 }
