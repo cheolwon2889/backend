@@ -14,6 +14,11 @@ import com.example.demo.domain.ContainerVO;
 
 @Service("ContainerRecommendationService")
 public class ContainerRecommendationService {
+	
+	
+	
+	
+	
 
 	public void calculateContainerRecommendation(List<ContainerVO> containerVOList) {
 	    // 미리 정의된 포트 목록

@@ -5,11 +5,14 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.domain.ContainerVO;
+import com.example.demo.domain.ShipVO;
 import com.example.demo.service.ContainerRecommendationService;
+import com.example.demo.service.ContainerService;
 
 @RestController
 @RequestMapping("/testContainer")
@@ -18,8 +21,20 @@ public class ContainerRecommendationController {
 	@Autowired
 	private ContainerRecommendationService containerService;
 	
+	@Autowired
+	private ContainerService cService;
+	
+	
+	@GetMapping("/{ship_id}")
+	public void getShipSchedule(@PathVariable("ship_id") String ship_id) {
+		cService.getShipSchedule(ship_id);
+		
+	}
+	
 	@GetMapping
 	public void getContainerRecommendation() {
+		
+		
 		List<ContainerVO> containers = Arrays.asList(
 				new ContainerVO("C1", "Busan", 16.4, 1),
 			    new ContainerVO("C2", "Shanghai", 10.6, 2),
